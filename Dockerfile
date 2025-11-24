@@ -23,7 +23,8 @@ COPY ./package.json /app/
 # lazy install Chromium to avoid cache miss, only install production dependencies to minimize the image size
 RUN \
     set -ex && \
-    # export PUPPETEER_SKIP_DOWNLOAD=true && \
+    export PUPPETEER_SKIP_DOWNLOAD=true && \
+    npx puppeteer browsers install chrome && \
     pnpm install --frozen-lockfile && \
     pnpm rb
 
