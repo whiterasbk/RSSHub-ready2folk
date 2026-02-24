@@ -1,23 +1,21 @@
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import { defineConfig } from 'eslint/config';
+import github from 'eslint-plugin-github';
 import { importX } from 'eslint-plugin-import-x';
 import n from 'eslint-plugin-n';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unicorn from 'eslint-plugin-unicorn';
+import eslintPluginYml from 'eslint-plugin-yml';
 import globals from 'globals';
-import yamlParser from 'yaml-eslint-parser';
+
 // import nsfwFlagPlugin from './eslint-plugins/nsfw-flag.js';
 
-const __dirname = import.meta.dirname;
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-});
+const SOURCE_FILES_GLOB = '**/*.?([cm])[jt]s?(x)';
 
-export default [
+export default defineConfig([
     // {
     //     plugins: {
     //         '@rsshub/nsfw-flag': nsfwFlagPlugin,
@@ -27,16 +25,19 @@ export default [
     //     },
     // },
     {
-        ignores: ['**/coverage', '**/.vscode', '**/docker-compose.yml', '!.github', 'assets/build', 'lib/routes-deprecated', 'lib/router.js', '**/babel.config.js', 'scripts/docker/minify-docker.js', 'dist', 'dist-lib'],
+        ignores: ['**/coverage', '**/.vscode', '**/docker-compose.yml', '!.github', 'assets/build', 'lib/routes-deprecated', 'lib/router.js', 'dist', 'dist-lib', 'dist-worker'],
     },
-    ...compat.extends('eslint:recommended', 'plugin:yml/recommended', 'plugin:@typescript-eslint/recommended'),
-    n.configs['flat/recommended-script'],
-    unicorn.configs.recommended,
     {
+        files: [SOURCE_FILES_GLOB],
         plugins: {
             '@stylistic': stylistic,
             '@typescript-eslint': typescriptEslint,
+            github,
+            js,
+            n,
+            unicorn,
         },
+        extends: [js.configs.recommended, typescriptEslint.configs['flat/recommended'], typescriptEslint.configs['flat/stylistic'], n.configs['flat/recommended-script'], unicorn.configs.recommended],
 
         languageOptions: {
             globals: {
@@ -50,7 +51,7 @@ export default [
         },
 
         rules: {
-            // possible problems
+            // #region possible problems
             'array-callback-return': [
                 'error',
                 {
@@ -61,8 +62,9 @@ export default [
             'no-await-in-loop': 'error',
             'no-control-regex': 'off',
             'no-prototype-builtins': 'off',
+            // #endregion
 
-            // suggestions
+            // #region suggestions
             'arrow-body-style': 'error',
             'block-scoped-var': 'error',
             curly: 'error',
@@ -94,9 +96,9 @@ export default [
 
             'no-implicit-globals': 'error',
             'no-labels': 'error',
+            'no-lonely-if': 'error',
             'no-multi-str': 'error',
             'no-new-func': 'error',
-            'no-restricted-imports': 'error',
 
             'no-restricted-syntax': [
                 'error',
@@ -135,7 +137,6 @@ export default [
             'prefer-arrow-callback': 'error',
             'prefer-const': 'error',
             'prefer-object-has-own': 'error',
-            'no-useless-escape': 'warn',
 
             'prefer-regex-literals': [
                 'error',
@@ -145,10 +146,19 @@ export default [
             ],
 
             'require-await': 'error',
+            // #endregion
 
-            // typescript
+            // #region typescript
+            '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
+
             '@typescript-eslint/ban-ts-comment': 'off',
+            '@typescript-eslint/consistent-indexed-object-style': 'off', // stylistic
+            '@typescript-eslint/consistent-type-definitions': 'off', // stylistic
+            '@typescript-eslint/no-empty-function': 'off', // stylistic && tests
             '@typescript-eslint/no-explicit-any': 'off',
+
+            '@typescript-eslint/no-inferrable-types': ['error', { ignoreParameters: true, ignoreProperties: true }],
+
             '@typescript-eslint/no-var-requires': 'off',
 
             '@typescript-eslint/no-unused-expressions': [
@@ -167,7 +177,10 @@ export default [
                 },
             ],
 
-            // unicorn
+            '@typescript-eslint/prefer-for-of': 'error',
+            // #endregion
+
+            // #region unicorn
             'unicorn/consistent-function-scoping': 'warn',
             'unicorn/explicit-length-check': 'off',
 
@@ -184,6 +197,7 @@ export default [
             'unicorn/no-array-sort': 'warn',
             'unicorn/no-await-expression-member': 'off',
             'unicorn/no-empty-file': 'warn',
+            'unicorn/no-for-loop': 'off',
             'unicorn/no-hex-escape': 'warn',
             'unicorn/no-null': 'off',
             'unicorn/no-object-as-default-parameter': 'warn',
@@ -253,8 +267,9 @@ export default [
             'unicorn/switch-case-braces': ['error', 'avoid'],
             'unicorn/text-encoding-identifier-case': 'off',
             'unicorn/number-literal-case': 'off',
+            // #endregion
 
-            // formatting rules
+            // #region stylistic
             '@stylistic/arrow-parens': 'error',
             '@stylistic/arrow-spacing': 'error',
             '@stylistic/comma-spacing': 'error',
@@ -279,9 +294,9 @@ export default [
             '@stylistic/space-infix-ops': 'error',
             '@stylistic/space-unary-ops': 'error',
             '@stylistic/spaced-comment': 'error',
+            // #endregion
 
-            // https://github.com/eslint-community/eslint-plugin-n
-            // node specific rules
+            // #region node specific rules
             'n/no-extraneous-require': 'error',
 
             'n/no-deprecated-api': 'warn',
@@ -305,15 +320,10 @@ export default [
                     ignores: [],
                 },
             ],
+            // #endregion
 
-            'yml/quotes': [
-                'error',
-                {
-                    prefer: 'single',
-                },
-            ],
-
-            'yml/no-empty-mapping-value': 'off',
+            // github
+            'github/no-then': 'warn',
         },
     },
     {
@@ -323,23 +333,7 @@ export default [
         },
     },
     {
-        files: ['**/*.yaml', '**/*.yml'],
-
-        languageOptions: {
-            parser: yamlParser,
-        },
-
-        rules: {
-            'lines-around-comment': [
-                'error',
-                {
-                    beforeBlockComment: false,
-                },
-            ],
-        },
-    },
-    {
-        files: ['**/*.?([cm])[jt]s?(x)'],
+        files: [SOURCE_FILES_GLOB],
         plugins: {
             'simple-import-sort': simpleImportSort,
             'import-x': importX,
@@ -359,4 +353,37 @@ export default [
             'import-x/consistent-type-specifier-style': ['error', 'prefer-top-level'],
         },
     },
-];
+    {
+        files: ['**/*.yaml', '**/*.yml'],
+        ignores: ['pnpm-lock.yaml'],
+        plugins: {
+            yml: eslintPluginYml,
+        },
+        language: 'yml/yaml',
+        rules: {
+            'lines-around-comment': [
+                'error',
+                {
+                    beforeBlockComment: false,
+                },
+            ],
+
+            'yml/indent': [
+                'error',
+                4,
+                {
+                    indicatorValueIndent: 2,
+                },
+            ],
+
+            'yml/no-empty-mapping-value': 'off',
+
+            'yml/quotes': [
+                'error',
+                {
+                    prefer: 'single',
+                },
+            ],
+        },
+    },
+]);
