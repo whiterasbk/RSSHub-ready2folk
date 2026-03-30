@@ -1,6 +1,7 @@
+import chromium from '@sparticuz/chromium';
 import { anonymizeProxy } from 'proxy-chain';
-import type { Browser, Page } from 'rebrowser-puppeteer';
-import puppeteer from 'rebrowser-puppeteer';
+import type { Browser, Page } from 'puppeteer-core';
+import puppeteer from 'puppeteer-core';
 
 import { config } from '@/config';
 
@@ -12,6 +13,7 @@ import proxy from './proxy';
  * @returns Puppeteer browser
  */
 const outPuppeteer = async () => {
+    const executablePath1 = await chromium.executablePath();
     const options = {
         args: [
             '--no-sandbox',
@@ -47,9 +49,9 @@ const outPuppeteer = async () => {
               browserWSEndpoint: config.puppeteerWSEndpoint,
           })
         : insidePuppeteer.launch(
-              config.chromiumExecutablePath
+              executablePath1
                   ? {
-                        executablePath: config.chromiumExecutablePath,
+                        executablePath: executablePath1,
                         ...options,
                     }
                   : options
@@ -80,6 +82,7 @@ export const getPuppeteerPage = async (
         noGoto?: boolean;
     } = {}
 ) => {
+    const executablePath1 = await chromium.executablePath();
     const options = {
         args: [
             '--no-sandbox',
@@ -142,9 +145,9 @@ export const getPuppeteerPage = async (
         });
     } else {
         browser = await insidePuppeteer.launch(
-            config.chromiumExecutablePath
+            executablePath1
                 ? {
-                      executablePath: config.chromiumExecutablePath,
+                      executablePath: executablePath1,
                       ...options,
                   }
                 : options
